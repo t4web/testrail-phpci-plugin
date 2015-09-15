@@ -1,0 +1,15 @@
+{
+    "name"             : "t4web/testrail-phpci-plugin",
+    "description"      : "",
+    "minimum-stability": "stable",
+    "type"             : "library",
+
+    "extra": {
+        "phpci": {
+            "pluginNamespace": "t4web\\PhpciPlugins\\",
+            "suppliedPlugins": [
+                {"name": "TestRail", "class": "TestRailPlugin"}
+            ]
+        }
+    }
+}
