@@ -11,5 +11,11 @@
                 {"name": "TestRail", "class": "TestRailPlugin"}
             ]
         }
+    },
+
+    "autoload": {
+        "psr-0": {
+            "t4web\\PhpciPlugins\\TestRailPlugin": "."
+        }
     }
 }
