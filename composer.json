@@ -15,7 +15,8 @@
 
     "require": {
         "php": ">=5.3.3",
-        "guzzlehttp/guzzle": "^6.1"
+        "guzzlehttp/guzzle": "^6.1",
+        "paquettg/php-html-parser": "^1.6"
     },
 
     "autoload": {
