@@ -179,7 +179,7 @@ class TestRailPlugin implements Plugin
             'index.php?/api/v2/add_run/' . $this->projectId,
             [
                 "suite_id" => 1,
-                "name" => "Automated tests for branch " . $this->build->getBranch(),
+                "name" => sprintf("Automated tests for branch %s (build %s)", $this->build->getBranch(), $this->build->getId()),
                 "assignedto_id" => 1,
                 "include_all" => false,
                 "case_ids" => $caseIds
