@@ -110,7 +110,7 @@ class TestRailPlugin implements Plugin
         $this->phpci->log('Start parse html report');
         $testSteps = $this->getTestResultsFromHtml();
 
-        $this->phpci->log(sprinf("Found %s tests", count($tests));
+        $this->phpci->log(sprinf("Found %s tests", count($tests)));
         $this->phpci->log('Add Test Run');
         $run = $this->addRun(array_keys($tests));
 
