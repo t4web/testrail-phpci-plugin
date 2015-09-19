@@ -219,6 +219,11 @@ class TestRailPlugin implements Plugin
 
     private function getTestResultsFromTap()
     {
+        if (!file_exists($this->phpci->buildPath . '/tests/_output/report.tap.log')) {
+            $this->phpci->logFailure(sprintf("Report file %s not exists", $this->phpci->buildPath . '/tests/_output/report.tap.log'));
+            return [];
+        }
+
         $tapString = file_get_contents(
             $this->phpci->buildPath . '/tests/_output/report.tap.log'
         );
@@ -261,6 +266,11 @@ class TestRailPlugin implements Plugin
 
     private function getTestResultsFromHtml()
     {
+        if (!file_exists($this->phpci->buildPath . '/tests/_output/report.html')) {
+            $this->phpci->logFailure(sprintf("Report file %s not exists", $this->phpci->buildPath . '/tests/_output/report.html'));
+            return [];
+        }
+
         $htmlString = file_get_contents(
             $this->phpci->buildPath . '/tests/_output/report.html'
         );
