@@ -104,9 +104,14 @@ class TestRailPlugin implements Plugin
 
     public function execute()
     {
+        $this->phpci->log('Start parse tap file');
         $tests = $this->getTestResultsFromTap();
+
+        $this->phpci->log('Start parse html report');
         $testSteps = $this->getTestResultsFromHtml();
 
+        $this->phpci->log(sprinf("Found %s tests", count($tests));
+        $this->phpci->log('Add Test Run');
         $run = $this->addRun(array_keys($tests));
 
         $runTests = $this->getTests($run['id']);
@@ -136,8 +141,10 @@ class TestRailPlugin implements Plugin
             ];
 
         }
+        $this->phpci->log('Add Test Results');
         $this->addResults($run['id'], $results);
 
+        $this->phpci->log('Add Close Test Run');
         $this->closeRun($run['id']);
 
         return true;
