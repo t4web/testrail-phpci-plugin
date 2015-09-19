@@ -40,6 +40,16 @@ class TestRailPlugin implements Plugin
     protected $pass;
 
     /**
+     * @var string
+     */
+    protected $phpciHost;
+
+    /**
+     * @var string
+     */
+    protected $buildDomain;
+
+    /**
      * @var GuzzleHttp\Client
      */
     private $api;
@@ -60,6 +70,18 @@ class TestRailPlugin implements Plugin
         }
 
         $this->url = $options['url'];
+
+        if (!array_key_exists('phpciHost', $options)) {
+            throw new \Exception('option "phpciHost" must be filled in');
+        }
+
+        $this->phpciHost = $options['phpciHost'];
+
+        if (!array_key_exists('buildDomain', $options)) {
+            throw new \Exception('option "buildDomain" must be filled in');
+        }
+
+        $this->buildDomain = $options['buildDomain'];
 
         if (!array_key_exists('projectId', $options)) {
             throw new \Exception('option "projectId" must be filled in');
@@ -92,13 +114,25 @@ class TestRailPlugin implements Plugin
         $results = [];
         foreach ($runTests as $runTest) {
 
+            $steps = '';
             if (!array_key_exists($runTest['case_id'], $tests)) {
                 continue;
             }
 
+            if (array_key_exists($runTest['case_id'], $testSteps)) {
+                $steps = implode(PHP_EOL, $testSteps[$runTest['case_id']]['steps']);
+                $host = $this->build->getId() . $this->buildDomain;
+                $steps .= PHP_EOL . PHP_EOL . "---";
+                $steps .= PHP_EOL . "Host: [$host](http://$host)";
+                $steps .= PHP_EOL . "[Build details]({$this->phpciHost}/build/view/{$this->build->getId()})";
+                $steps .= " | [Recorded result](http://$host/tests/_output/records.html)";
+                $steps .= " | [Step details](http://$host/tests/_output/report.html)";
+            }
+
             $results[] = [
                 'test_id' => $runTest['id'],
-                'status_id' => ($tests[$runTest['case_id']]['ok']) ? 1 : 5
+                'status_id' => ($tests[$runTest['case_id']]['ok']) ? 1 : 5,
+                'comment' => $steps
             ];
 
         }
@@ -188,8 +222,7 @@ class TestRailPlugin implements Plugin
         foreach ($linesRaw as $line) {
             $line = trim($line);
 
-            $id = substr($line, strpos($line, '[') +1);
-            $id = substr($id, 0, strpos($id, ']'));
+            $id = $this->parseId($line);
 
             if (strpos($line, 'not ok ') !== false) {
                 $tests[$id] = [
@@ -211,16 +244,54 @@ class TestRailPlugin implements Plugin
         return $tests;
     }
 
+    private function parseId($str)
+    {
+        $id = substr($str, strpos($str, '[') +1);
+        $id = substr($id, 0, strpos($id, ']'));
+
+        return $id;
+    }
+
     private function getTestResultsFromHtml()
     {
         $htmlString = file_get_contents(
             $this->phpci->buildPath . '/tests/_output/report.html'
         );
 
+        $tests = [];
+
         $dom = new Dom;
         $dom->load($htmlString);
-        $a = $dom->find('table');
-        die(var_dump($a));
+
+        /** @var Dom\HtmlNode $table */
+        $table = $dom->find('table')[0];
+        $id = 0;
+        foreach($table->find('tr') as $lineNo => $tr) {
+
+            if ($lineNo == 0) {
+                continue;
+            }
+
+            if (strpos($tr->find('td')[0]->innerHtml, 'Summary')) {
+                break;
+            }
+
+            if ($lineNo % 2 == 1) {
+                $p = $tr->find('td p')[0];
+                $name = strip_tags($p->innerHtml);
+                $name = str_replace('[+]', '', $name);
+                $id = $this->parseId($name);
+                $tests[$id] = [
+                    'id' => $id,
+                    'name' => trim(strip_tags($p->innerHtml)),
+                    'steps' => []
+                ];
+            } else {
+                foreach($tr->find('td table tr') as $lineNo => $tr) {
+                    $tests[$id]['steps'][] = trim(strip_tags($tr->innerHtml));
+                }
+            }
+        }
 
         return $tests;
     }
