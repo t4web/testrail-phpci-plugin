@@ -173,6 +173,13 @@ class TestRailPlugin implements Plugin
 
     private function addRun(array $caseIds = [])
     {
+        $host = $this->build->getId() . $this->buildDomain;
+
+        $description = "Host: [$host](http://$host)";
+        $description .= PHP_EOL . "[Build details]({$this->phpciHost}/build/view/{$this->build->getId()})";
+        $description .= " | [Recorded result](http://$host/tests/_output/records.html)";
+        $description .= " | [Step details](http://$host/tests/_output/report.html)";
+
         /** @var GuzzleHttp\Psr7\Response $responce */
         $responce = $this->api(
             'POST',
@@ -180,6 +187,7 @@ class TestRailPlugin implements Plugin
             [
                 "suite_id" => 1,
                 "name" => sprintf("Automated tests for branch %s (build %s)", $this->build->getBranch(), $this->build->getId()),
+                "description" => $description,
                 "assignedto_id" => 1,
                 "include_all" => false,
                 "case_ids" => $caseIds
